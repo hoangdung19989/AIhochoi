@@ -2,15 +2,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Subject, Quiz, TestType } from '../types';
 
-// Use process.env.API_KEY as expected by the playground environment
-const API_KEY = process.env.API_KEY;
+// Robustly retrieve the API KEY
+// 1. Try standard Vite env var (import.meta.env.VITE_API_KEY)
+// 2. Fallback to process.env.API_KEY (polyfilled by vite.config.ts)
+const API_KEY = (import.meta as any).env?.VITE_API_KEY || process.env.API_KEY;
 
 if (!API_KEY) {
-  console.error("API_KEY environment variable is not set. Please check your environment configuration.");
+  console.error("CRITICAL ERROR: API_KEY is missing. Please set VITE_API_KEY in your Vercel Environment Variables.");
 }
 
-// Safe initialization
-const geminiAI = new GoogleGenAI({ apiKey: API_KEY || 'DUMMY_KEY' });
+// Safe initialization - We use a dummy key if missing to prevent app crash on load, 
+// but requests will fail gracefully with a clear error.
+const geminiAI = new GoogleGenAI({ apiKey: API_KEY || 'MISSING_API_KEY' });
 
 const getSystemInstruction = (subjectName: string): string => {
   return `You are a world-class, friendly, and patient tutor for Vietnamese high school students. 
@@ -46,7 +49,7 @@ export const getTutorResponse = async (subject: Subject, prompt: string): Promis
     return response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
   } catch (error) {
     console.error("Gemini API call failed:", error);
-    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Vui lòng thử lại sau.";
+    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra API Key hoặc thử lại sau.";
   }
 };
 
@@ -65,7 +68,7 @@ export const getGenericTutorResponse = async (prompt: string): Promise<string> =
     return response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
   } catch (error) {
     console.error("Gemini API call failed:", error);
-    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Vui lòng thử lại sau.";
+    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra API Key hoặc thử lại sau.";
   }
 };
 
