@@ -15,6 +15,27 @@ if (!API_KEY) {
 // but requests will fail gracefully with a clear error.
 const geminiAI = new GoogleGenAI({ apiKey: API_KEY || 'MISSING_API_KEY' });
 
+// Helper function to handle errors gracefully
+const handleGeminiError = (error: any, context: string): never => {
+    console.error(`Gemini API call failed during ${context}:`, error);
+    
+    const errorMessage = error.toString().toLowerCase();
+    
+    if (errorMessage.includes('429') || errorMessage.includes('resource_exhausted') || errorMessage.includes('quota')) {
+        throw new Error("Hệ thống đang quá tải (Hết lượt dùng miễn phí Google AI). Vui lòng thử lại sau vài phút hoặc sử dụng API Key khác.");
+    }
+    
+    if (errorMessage.includes('400') || errorMessage.includes('invalid_argument') || errorMessage.includes('api key not valid')) {
+        throw new Error("API Key không hợp lệ. Vui lòng kiểm tra cấu hình trong Vercel (VITE_API_KEY).");
+    }
+
+    if (error instanceof Error) {
+        throw new Error(error.message);
+    }
+    
+    throw new Error("Đã xảy ra lỗi kết nối không xác định. Vui lòng thử lại.");
+};
+
 const getSystemInstruction = (subjectName: string): string => {
   return `You are a world-class, friendly, and patient tutor for Vietnamese high school students. 
 Your subject of expertise is ${subjectName}. 
@@ -48,8 +69,12 @@ export const getTutorResponse = async (subject: Subject, prompt: string): Promis
 
     return response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
   } catch (error) {
-    console.error("Gemini API call failed:", error);
-    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra API Key hoặc thử lại sau.";
+    // For chat, we return the string directly instead of throwing, to show in the chat bubble
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+        return "⚠️ Hệ thống đang quá tải (Hết lượt dùng miễn phí). Vui lòng đợi vài phút.";
+    }
+    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra mạng hoặc thử lại sau.";
   }
 };
 
@@ -67,8 +92,12 @@ export const getGenericTutorResponse = async (prompt: string): Promise<string> =
 
     return response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
   } catch (error) {
-    console.error("Gemini API call failed:", error);
-    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI. Vui lòng kiểm tra API Key hoặc thử lại sau.";
+     // For chat, we return the string directly
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+        return "⚠️ Hệ thống đang quá tải (Hết lượt dùng miễn phí). Vui lòng đợi vài phút.";
+    }
+    return "Rất tiếc, đã có lỗi xảy ra khi kết nối với AI.";
   }
 };
 
@@ -175,12 +204,10 @@ export const generateQuiz = async (subjectName: string, gradeName: string, testT
         return quizData;
 
     } catch (error) {
-        console.error("Gemini API call for quiz generation failed:", error);
-        if (error instanceof Error) {
-            throw new Error(error.message);
-        }
-        throw new Error("Không thể tạo bài kiểm tra lúc này. Vui lòng thử lại sau.");
+        handleGeminiError(error, "generateQuiz");
     }
+    // This part is unreachable due to handleGeminiError throwing, but required by TS
+    throw new Error("Unknown error");
 };
 
 export const generateMockExam = async (subjectName: string, gradeName: string): Promise<Quiz> => {
@@ -265,12 +292,9 @@ export const generateMockExam = async (subjectName: string, gradeName: string): 
         return quizData;
 
     } catch (error) {
-        console.error("Gemini API call for mock exam generation failed:", error);
-        if (error instanceof Error) {
-            throw new Error(error.message);
-        }
-        throw new Error("Không thể tạo bài thi thử lúc này. Vui lòng thử lại sau.");
+        handleGeminiError(error, "generateMockExam");
     }
+    throw new Error("Unknown error");
 };
 
 export const generatePracticeExercises = async (subjectName: string, gradeName: string, lessonTitle: string): Promise<Quiz> => {
@@ -342,10 +366,7 @@ export const generatePracticeExercises = async (subjectName: string, gradeName: 
         return practiceData;
 
     } catch (error) {
-        console.error("Gemini API call for practice exercise generation failed:", error);
-        if (error instanceof Error) {
-            throw new Error(error.message);
-        }
-        throw new Error("Không thể tạo bài tập lúc này. Vui lòng thử lại sau.");
+        handleGeminiError(error, "generatePracticeExercises");
     }
+    throw new Error("Unknown error");
 };
