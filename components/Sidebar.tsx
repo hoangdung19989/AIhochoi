@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import type { View } from '../App';
 import { 
@@ -7,6 +8,7 @@ import {
     QuestionMarkCircleIcon,
     ChatBubbleBottomCenterTextIcon,
     ChevronRightIcon,
+    OnLuyenLogo
 } from './icons';
 
 
@@ -64,19 +66,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, onOpenAb
         className={`bg-brand-blue-dark text-white flex flex-col p-3 shadow-2xl z-20 transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-20'}`}
     >
         <div className={`flex items-center mb-8 pt-1 ${isExpanded ? 'pl-1' : 'justify-center'}`}>
-            <div className="bg-white rounded-full p-1.5 mr-3 flex-shrink-0">
-                 <svg className="h-8 w-8 text-brand-blue-dark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="50" cy="50" r="48" stroke="#2A3F7A" strokeWidth="4" fill="none" />
-                    <text x="50" y="60" fontFamily="Arial, sans-serif" fontSize="40" fill="#2A3F7A" textAnchor="middle" fontWeight="bold">AI</text>
-                </svg>
+            <div className="mr-3 flex-shrink-0">
+                 <OnLuyenLogo className="h-10 w-10" />
             </div>
-            <span className={`text-2xl font-bold tracking-wider whitespace-nowrap transition-all duration-200 overflow-hidden ${isExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>onluyen</span>
+            <span className={`text-2xl font-extrabold tracking-wide whitespace-nowrap transition-all duration-200 overflow-hidden ${isExpanded ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>OnLuyen</span>
         </div>
       
       <nav className="flex-1 space-y-2">
         <NavLink icon={HomeIcon} label="Trang chủ" isActive={currentView === 'home'} isExpanded={isExpanded} onClick={() => setCurrentView('home')} />
         <NavLink icon={PencilSquareIcon} label="Tự học" isActive={isSelfStudyActive} isExpanded={isExpanded} onClick={() => setCurrentView('self-study')} />
-        <NavLink icon={LightBulbIcon} label="AI ConCo" isActive={isAiConvoActive} isExpanded={isExpanded} onClick={() => setCurrentView('ai-subjects')} />
+        <NavLink icon={LightBulbIcon} label="AI Convo" isActive={isAiConvoActive} isExpanded={isExpanded} onClick={() => setCurrentView('ai-subjects')} />
       </nav>
 
         <div className="mt-auto">
